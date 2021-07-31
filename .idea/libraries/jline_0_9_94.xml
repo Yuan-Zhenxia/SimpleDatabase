@@ -1,0 +1,15 @@
+<component name="libraryTable">
+  <library name="jline-0.9.94">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/Downloads/study/projects/SimpleDB/lib/jline-0.9.94.jar!/" />
+      <root url="jar://$USER_HOME$/Downloads/study/projects/SimpleDB/lib/junit-4.5.jar!/" />
+      <root url="jar://$USER_HOME$/Downloads/study/projects/SimpleDB/lib/jzlib-1.0.7.jar!/" />
+      <root url="jar://$USER_HOME$/Downloads/study/projects/SimpleDB/lib/mina-core-2.0.4.jar!/" />
+      <root url="jar://$USER_HOME$/Downloads/study/projects/SimpleDB/lib/mina-filter-compression-2.0.4.jar!/" />
+      <root url="jar://$USER_HOME$/Downloads/study/projects/SimpleDB/lib/slf4j-api-1.6.1.jar!/" />
+      <root url="jar://$USER_HOME$/Downloads/study/projects/SimpleDB/lib/zql.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
