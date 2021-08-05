@@ -1,5 +1,6 @@
 package simpleDatabase.index;
 
+import simpleDatabase.cache.Tuple;
 import simpleDatabase.tx.TransactionId;
 import Predicate.Op;
 
@@ -10,7 +11,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 
-/** Helper methods used for testing and implementing random features. */
+/**
+ * Helper methods used for testing and implementing random features. */
 public class BTreeUtility {
 
 	public static final int MAX_RAND_VALUE = 1 << 16;
