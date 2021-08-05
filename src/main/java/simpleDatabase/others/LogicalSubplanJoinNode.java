@@ -2,6 +2,7 @@ package simpleDatabase.others;
 
 import simpleDatabase.basic.Predicate;
 import simpleDatabase.iterator.OpIterator;
+import simpleDatabase.operator.LogicalJoinNode;
 
 /** A LogicalSubplanJoinNode represens the state needed of a join of a
  * table to a subplan in a LogicalQueryPlan -- inherits state from

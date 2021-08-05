@@ -1,4 +1,6 @@
 package simpleDatabase.others;
+import simpleDatabase.operator.LogicalJoinNode;
+
 import java.util.Vector;
 
 /** Class returned by {@link JoinOptimizer#computeCostAndCardOfSubplan} specifying the

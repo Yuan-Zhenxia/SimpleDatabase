@@ -1,4 +1,6 @@
 package simpleDatabase.others;
+import simpleDatabase.operator.LogicalJoinNode;
+
 import java.util.HashMap;
 import java.util.Set;
 import java.util.Vector;
