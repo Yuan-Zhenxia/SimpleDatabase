@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.*;
 
 /**
+ *
  * The Catalog keeps track of all available tables in the database and their
  * associated schemas.
  * For now, this is a stub catalog that must be populated with tables by a
