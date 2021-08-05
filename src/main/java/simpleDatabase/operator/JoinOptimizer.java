@@ -15,7 +15,7 @@ import java.util.*;
  */
 public class JoinOptimizer {
     LogicalPlan p;
-    Vector<LogicalJoinNode> joins;
+    Vector<simpledb.LogicalJoinNode> joins;
 
     /**
      * Constructor
