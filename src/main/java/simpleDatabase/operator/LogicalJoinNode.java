@@ -1,5 +1,7 @@
 package simpledb;
 
+import simpleDatabase.basic.Predicate;
+
 /**
  * Finished on 5 Aug.
  *
