@@ -12,6 +12,7 @@ import java.util.*;
 
 /**
  * finished on 29 Jul.
+ *
  * The Catalog keeps track of all available tables in the database and their
  * associated schemas.
  * For now, this is a stub catalog that must be populated with tables by a
