@@ -25,7 +25,7 @@ public class JoinOptimizer {
      * @param joins
      *            the list of joins being performed
      */
-    public JoinOptimizer(LogicalPlan p, Vector<LogicalJoinNode> joins) {
+    public JoinOptimizer(LogicalPlan p, Vector<simpledb.LogicalJoinNode> joins) {
         this.p = p;
         this.joins = joins;
     }
