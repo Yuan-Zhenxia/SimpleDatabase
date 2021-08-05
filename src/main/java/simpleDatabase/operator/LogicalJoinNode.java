@@ -1,6 +1,6 @@
 package simpledb;
 
-import simpleDatabase.basic.Predicate;
+import simpleDatabase.operator.Predicate;
 
 /**
  * Finished on 5 Aug.

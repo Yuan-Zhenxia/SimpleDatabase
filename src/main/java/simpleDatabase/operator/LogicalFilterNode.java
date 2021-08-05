@@ -1,4 +1,4 @@
-import simpleDatabase.basic.Predicate;
+import simpleDatabase.operator.Predicate;
 
 /** LogicalFilterNode represents the parameters of a filter in the WHERE clause of a query.
  <p>

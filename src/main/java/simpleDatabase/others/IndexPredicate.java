@@ -1,6 +1,6 @@
 package simpleDatabase.others;
 
-import simpleDatabase.basic.Predicate;
+import simpleDatabase.operator.Predicate;
 import simpleDatabase.field.Field;
 import simpleDatabase.iterator.IndexOpIterator;
 

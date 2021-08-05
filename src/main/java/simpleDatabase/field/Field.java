@@ -1,6 +1,6 @@
 package simpleDatabase.field;
 
-import simpleDatabase.basic.Predicate;
+import simpleDatabase.operator.Predicate;
 import simpleDatabase.basic.Type;
 
 

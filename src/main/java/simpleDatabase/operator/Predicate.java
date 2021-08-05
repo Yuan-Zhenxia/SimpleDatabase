@@ -1,4 +1,4 @@
-package simpleDatabase.basic;
+package simpleDatabase.operator;
 
 import simpleDatabase.field.Field;
 import simpleDatabase.cache.Tuple;

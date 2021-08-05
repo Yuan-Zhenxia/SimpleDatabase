@@ -1,6 +1,6 @@
 package simpleDatabase.others;
 
-import simpleDatabase.basic.Predicate;
+import simpleDatabase.operator.Predicate;
 
 /**
  * A class to represent a fixed-width histogram over a single String-based

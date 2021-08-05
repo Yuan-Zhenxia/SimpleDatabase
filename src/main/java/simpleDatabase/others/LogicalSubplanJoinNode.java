@@ -1,6 +1,6 @@
 package simpleDatabase.others;
 
-import simpleDatabase.basic.Predicate;
+import simpleDatabase.operator.Predicate;
 import simpleDatabase.iterator.OpIterator;
 import simpleDatabase.operator.LogicalJoinNode;
 

@@ -1,7 +1,7 @@
 package simpleDatabase.others;
 
 import simpleDatabase.basic.Database;
-import simpleDatabase.basic.Predicate;
+import simpleDatabase.operator.Predicate;
 import simpleDatabase.field.Field;
 
 import java.util.HashMap;
