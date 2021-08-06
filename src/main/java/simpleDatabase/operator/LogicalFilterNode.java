@@ -1,6 +1,8 @@
 import simpleDatabase.operator.Predicate;
 
-/** LogicalFilterNode represents the parameters of a filter in the WHERE clause of a query.
+/**
+ * Finished
+ * LogicalFilterNode represents the parameters of a filter in the WHERE clause of a query.
  <p>
  Filter is of the form t.f p c
  <p>

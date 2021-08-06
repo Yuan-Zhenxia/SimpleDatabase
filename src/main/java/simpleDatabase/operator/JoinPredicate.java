@@ -1,5 +1,7 @@
 package simpleDatabase.operator;
 
+import simpleDatabase.cache.Tuple;
+
 import java.io.Serializable;
 
 /**

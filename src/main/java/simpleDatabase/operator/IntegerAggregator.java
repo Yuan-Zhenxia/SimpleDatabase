@@ -1,6 +1,9 @@
 package simpleDatabase.operator;
 
-import simpleDatabase.operator.Aggregator;
+import simpleDatabase.basic.Type;
+import simpleDatabase.cache.Tuple;
+import simpleDatabase.iterator.OpIterator;
+
 
 /**
  * Knows how to compute some aggregate over a set of IntFields.

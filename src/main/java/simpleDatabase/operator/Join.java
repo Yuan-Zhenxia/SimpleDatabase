@@ -1,5 +1,7 @@
 package simpleDatabase.operator;
 
+import simpleDatabase.iterator.OpIterator;
+
 import java.util.NoSuchElementException;
 
 /**
