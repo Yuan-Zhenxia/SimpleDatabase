@@ -17,6 +17,7 @@ public class Insert extends Operator {
     /**
      * Constructor.
      *
+     *
      * @param t
      *            The transaction running the insert.
      * @param child
