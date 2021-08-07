@@ -15,4 +15,7 @@ Finish part of the Operations, such as Insert.
 
 
 ## 7 AUg. 2021
+
 TODO
+
+Test whether Can push successfully?
