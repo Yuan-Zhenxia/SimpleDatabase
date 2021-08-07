@@ -12,3 +12,7 @@ Finish the Records, Tuple, HeapFIle, HeapPage, Buffer, LogFile...
 Finish part of the Operations, such as Insert.
 
 ## 5 Aug. 2021
+
+
+## 7 AUg. 2021
+TODO
