@@ -7,10 +7,14 @@ import simpleDatabase.field.Field;
 import simpleDatabase.tx.TransactionId;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 /**
+ * finished
+ *
  * Each instance of HeapPage stores data for one page of HeapFiles and 
  * implements the Page interface that is used by BufferPool.
  *
@@ -266,9 +270,17 @@ public class HeapPage implements Page {
      * @param t The tuple to add.
      */
     public void insertTuple(Tuple t) throws DbException {
-        // some code goes here
-        // not necessary for lab1
-        //TODO
+        if (!td.equals(t.getTupleDesc())) throw new DbException("tuple Description is mismatch");
+
+        for (int i = 0; i < getNumTuples(); ++i) {
+            if (!isSlotUsed(i)) {
+                tuples[i] = t;
+                t.setRecordId(new RecordId(pid, i));
+                markSlotUsed(i, true);
+                return;
+            }
+        }
+        throw new DbException("the page is full, cannot insert more tuples");
     }
 
     /**
@@ -276,19 +288,14 @@ public class HeapPage implements Page {
      * that did the dirtying
      */
     public void markDirty(boolean dirty, TransactionId tid) {
-        // some code goes here
-	    // not necessary for lab1
-        // TODO
+        lastDirtyOperation = dirty ? tid : null;
     }
 
     /**
      * Returns the tid of the transaction that last dirtied this page, or null if the page is not dirty
      */
     public TransactionId isDirty() {
-        // some code goes here
-	    // Not necessary for lab1
-        // TODO
-        return null;      
+        return lastDirtyOperation;
     }
 
     /**
@@ -319,31 +326,56 @@ public class HeapPage implements Page {
         header[byteNum] |= ((value == true ? 1 : 0) << pos);
     }
 
+    public static void main(String[] args) {
+        List<String> l = new ArrayList<>();
+        l.add("a");
+        l.add("b");
+        for (String i : l) {
+            if (i.equals("a")) {
+                l.remove(i);
+            }
+        }
+        Iterator<String> it = l.iterator();
+        while (it.hasNext()) {
+            String n = it.next();
+            if (n.equals("b")) {
+                l.remove(n);
+            }
+        }
+        System.out.println(l);
+    }
+
     /**
      * @return an iterator over all tuples on this page (calling remove on this iterator throws an UnsupportedOperationException)
      * (note that this iterator shouldn't return tuples in empty slots!)
      */
     public Iterator<Tuple> iterator() {
-        return new Iterator<Tuple>() {
-            private int pos = 0;
+        return new UsedTupleIterator();
+    }
 
-            private int idx = 0;
+    private class UsedTupleIterator implements Iterator<Tuple> {
 
-            private int usedTuplesNum = getNumTuples() - getNumEmptySlots();
+        private int pos = 0;
+        private int idx = 0;
+        private int usedTupleNum = getNumTuples() - getNumEmptySlots();
 
-            @Override
-            public boolean hasNext() {
-                return idx < getNumTuples() && pos < usedTuplesNum;
-            }
+        @Override
+        public boolean hasNext() {
+            return idx < getNumTuples() && pos < usedTupleNum;
+        }
 
-            @Override
-            public Tuple next() {
-                if (!hasNext()) throw new NoSuchElementException();
-                for (; !isSlotUsed(idx); ++idx) { }
-                pos++;
-                return tuples[idx++];
-            }
-        };
+        @Override
+        public Tuple next() {
+            if (!hasNext()) throw new NoSuchElementException();
+            for (; !isSlotUsed(idx); ++idx) {}
+            pos++;
+            return tuples[idx++];
+        }
+
+        @Override
+        public void remove() {
+
+        }
     }
 
 }
