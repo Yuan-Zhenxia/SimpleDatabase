@@ -8,6 +8,7 @@ import simpleDatabase.tx.LockManager;
 import simpleDatabase.tx.TransactionId;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -91,10 +92,19 @@ public class BufferPool {
      * @param pid the ID of the requested page
      * @param perm the requested permissions on the page
      */
-    public  Page getPage(TransactionId tid, PageId pid, Permissions perm)
+    public Page getPage(TransactionId tid, PageId pid, Permissions perm)
         throws TransactionAbortedException, DbException, InterruptedException {
-        // some code goes here
+        // 如果当前page被其他事务占有，那么无法获取该page 必须while等待
+        boolean tryAcquire = (perm == Permissions.READ_ONLY) ? lockManager.grantSLock(tid, pid)
+                : lockManager.grantXLock(tid, pid); /* 根据所需要的锁类型来分配不同的锁 */
 
+        while (!tryAcquire) {
+            // 没有获取锁成功
+            if (lockManager.dealLockDetect(tid, pid)) throw new TransactionAbortedException();
+            Thread.sleep(SLEEP_TIME);
+            tryAcquire = (perm == Permissions.READ_ONLY) ? lockManager.grantSLock(tid, pid)
+                    : lockManager.grantXLock(tid, pid); /* 再次判断是否能获取锁 */
+        }
 
         if (pageCache.isCached(pid)) return pageCache.get(pid);
         // 未命中
@@ -109,7 +119,6 @@ public class BufferPool {
             }
         }
         return newPage;
-
     }
 
     /**
@@ -121,11 +130,9 @@ public class BufferPool {
      * @param tid the ID of the transaction requesting the unlock
      * @param pid the ID of the page to unlock
      */
-    public  void releasePage(TransactionId tid, PageId pid) {
-        // some code goes here
-        // not necessary for lab1|lab2
-        // TODO
-
+    public synchronized void releasePage(TransactionId tid, PageId pid) {
+        if (!lockManager.unlock(tid, pid))
+            throw new IllegalArgumentException("try to release page failed");
     }
 
     /**
@@ -133,18 +140,27 @@ public class BufferPool {
      *
      * @param tid the ID of the transaction requesting the unlock
      */
-    public void transactionComplete(TransactionId tid) throws IOException {
-        // some code goes here
-        // not necessary for lab1|lab2
-        // TODO
+    public synchronized void transactionComplete(TransactionId tid) throws IOException {
+        transactionComplete(tid, true);
     }
 
     /** Return true if the specified transaction has a lock on the specified page */
     public boolean holdsLock(TransactionId tid, PageId p) {
-        // some code goes here
-        // not necessary for lab1|lab2
-        // TODO
-        return false;
+        return lockManager.getLockState(tid, p) != null;
+    }
+
+    /**
+     * 在事务回滚前，首先需要恢复该数据对page造成的改变
+     * @param tid
+     */
+    public synchronized void revertTransactionAction(TransactionId tid) {
+        Iterator<Page> it = pageCache.iterator();
+        while (it.hasNext()) {
+            Page p = it.next();
+            /* 假如这是脏页，且该脏页的数据是由该事务修改的，那么需要从磁盘中恢复原来的数据 */
+            if (p.isDirty() != null && p.isDirty().equals(tid))
+                pageCache.reCachePage(p.getId()); /* 从磁盘恢复该page的数据 */
+        }
     }
 
     /**
@@ -154,11 +170,13 @@ public class BufferPool {
      * @param tid the ID of the transaction requesting the unlock
      * @param commit a flag indicating whether we should commit or abort
      */
-    public void transactionComplete(TransactionId tid, boolean commit)
+    public synchronized void transactionComplete(TransactionId tid, boolean commit)
         throws IOException {
-        // some code goes here
-        // not necessary for lab1|lab2
-        // TODO
+        lockManager.releaseAllLocksByTid(tid);
+        if (commit)
+            flushPages(tid);
+        else
+            revertTransactionAction(tid);
     }
 
     /**
@@ -178,9 +196,9 @@ public class BufferPool {
      */
     public void insertTuple(TransactionId tid, int tableId, Tuple t)
         throws DbException, IOException, TransactionAbortedException {
-        // some code goes here
-        // not necessary for lab1
-        // TODO
+        HeapFile table = (HeapFile) Database.getCatalog().getDbFile(tableId);
+        ArrayList<Page> dirtyPages = table.insertTuple(tid, t);
+        for (Page p : dirtyPages) p.markDirty(true, tid);
     }
 
     /**
@@ -198,9 +216,10 @@ public class BufferPool {
      */
     public  void deleteTuple(TransactionId tid, Tuple t)
         throws DbException, IOException, TransactionAbortedException {
-        // some code goes here
-        // not necessary for lab1
-        // TODO
+        int tableId = t.getRecordId().getPageId().getTableId();
+        HeapFile table = (HeapFile) Database.getCatalog().getDbFile(tableId);
+        Page dirtyPage = table.deleteTuple(tid, t);
+        dirtyPage.markDirty(true, tid);
     }
 
     /**
@@ -209,10 +228,12 @@ public class BufferPool {
      *     break simpledb if running in NO STEAL mode.
      */
     public synchronized void flushAllPages() throws IOException {
-        // some code goes here
-        // not necessary for lab1
-        // TODO
-
+        Iterator<Page> it = pageCache.iterator();
+        while (it.hasNext()) {
+            Page p = it.next();
+            if (p.isDirty() != null)
+                flushPage(p);
+        }
     }
 
     /** Remove the specific page id from the buffer pool.
@@ -242,7 +263,9 @@ public class BufferPool {
         dirtyPage.markDirty(false, null);
     }
 
-    /** Write all pages of the specified transaction to disk.
+    /**
+     * 把当前事务tid相关的page刷盘
+     * Write all pages of the specified transaction to disk.
      */
     public synchronized  void flushPages(TransactionId tid) throws IOException {
         // some code goes here
@@ -251,7 +274,7 @@ public class BufferPool {
             Page p = it.next();
             if (p.isDirty() != null && p.isDirty().equals(tid)) {
                 flushPage(p);
-                if (p.isDirty() == null)
+                if (p.isDirty() == null) // 刷盘成功后，保存oldData 用来回滚
                     p.setBeforeImage();
             }
         }

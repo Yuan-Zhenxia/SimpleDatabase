@@ -49,6 +49,10 @@ public class PageLruCache extends LruCache<PageId, Page> {
         }
     }
 
+    /**
+     * 从磁盘恢复该page的状态
+     * @param pid
+     */
     public synchronized void reCachePage(PageId pid) {
         if (!isCached(pid)) throw new IllegalArgumentException();
 

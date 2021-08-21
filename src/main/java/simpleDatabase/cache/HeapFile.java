@@ -153,7 +153,7 @@ public class HeapFile implements DbFile {
                 break;
             }
         }
-        if (dirtyPages.size() == 0) {
+        if (dirtyPages.size() == 0) { /* 说明pages已经满了 */
             HeapPageId newPid = new HeapPageId(getId(), numPages());
             HeapPage blankPage = new HeapPage(newPid, HeapPage.createEmptyPageData());
             numPage++;
