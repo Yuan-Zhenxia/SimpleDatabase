@@ -1,5 +1,8 @@
 package simpleDatabase.operator;
 
+import simpleDatabase.cache.TupleDesc;
+import simpleDatabase.iterator.OpIterator;
+
 import java.util.ArrayList;
 import java.util.NoSuchElementException;
 

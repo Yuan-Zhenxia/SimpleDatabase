@@ -1,5 +1,10 @@
 package simpleDatabase.operator;
 
+import simpleDatabase.cache.Tuple;
+import simpleDatabase.cache.TupleDesc;
+import simpleDatabase.exception.DbException;
+import simpleDatabase.exception.TransactionAbortedException;
+import simpleDatabase.iterator.OpIterator;
 import simpleDatabase.others.LogicalPlan;
 import simpleDatabase.tx.TransactionId;
 

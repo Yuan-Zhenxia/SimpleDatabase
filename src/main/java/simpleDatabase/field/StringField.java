@@ -1,12 +1,11 @@
 package simpleDatabase.field;
 
-import simpleDatabase.others.Predicate;
-import simpleDatabase.others.Type;
+import simpleDatabase.basic.Type;
+import simpleDatabase.operator.Predicate;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import static simpleDatabase.others.Predicate.Op.EQUALS;
 
 /**
  * Instance of Field that stores a single String of a fixed length.

@@ -16,3 +16,7 @@ Finish part of the Operations, such as Insert.
 
 ## 7 AUg. 2021
 
+Finish LruCache && PageCache
+
+## 20 Aug. 2021
+Finish 

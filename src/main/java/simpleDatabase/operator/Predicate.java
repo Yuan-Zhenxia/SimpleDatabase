@@ -6,6 +6,8 @@ import simpleDatabase.cache.Tuple;
 import java.io.Serializable;
 
 /**
+ * 通过调用 field内部的比较方法，来实现代码分离
+ *
  * Predicate compares tuples to a specified Field value.
  */
 public class Predicate implements Serializable {

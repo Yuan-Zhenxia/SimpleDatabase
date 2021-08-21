@@ -1,4 +1,4 @@
-package simpleDatabase.others;
+package simpleDatabase.tx;
 
 import simpleDatabase.basic.Database;
 import simpleDatabase.tx.TransactionId;

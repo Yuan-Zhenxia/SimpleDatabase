@@ -3,6 +3,7 @@ package simpleDatabase.others;
 import jline.ArgumentCompletor;
 import jline.ConsoleReader;
 import jline.SimpleCompletor;
+import simpleDatabase.tx.Transaction;
 import simpleDatabase.tx.TransactionId;
 
 import java.io.*;

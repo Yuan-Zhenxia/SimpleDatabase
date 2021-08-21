@@ -5,6 +5,7 @@ import simpleDatabase.exception.TransactionAbortedException;
 import simpleDatabase.cache.Tuple;
 import simpleDatabase.cache.TupleDesc;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.NoSuchElementException;
 
@@ -22,7 +23,7 @@ public interface OpIterator extends Serializable{
    * @throws DbException when there are problems opening/accessing the database.
    */
   public void open()
-          throws DbException, TransactionAbortedException;
+          throws DbException, TransactionAbortedException, IOException;
 
   /** Returns true if the iterator has more tuples.
    * @return true f the iterator has more tuples.

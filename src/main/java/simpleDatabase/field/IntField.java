@@ -1,7 +1,8 @@
 package simpleDatabase.field;
 
-import simpleDatabase.others.Predicate;
-import simpleDatabase.others.Type;
+import simpleDatabase.basic.Type;
+import simpleDatabase.operator.Predicate;
+
 
 import java.io.DataOutputStream;
 import java.io.IOException;

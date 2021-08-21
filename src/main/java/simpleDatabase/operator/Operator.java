@@ -6,6 +6,7 @@ import simpleDatabase.exception.DbException;
 import simpleDatabase.exception.TransactionAbortedException;
 import simpleDatabase.iterator.OpIterator;
 
+import java.io.IOException;
 import java.util.NoSuchElementException;
 
 /**
@@ -64,7 +65,7 @@ public abstract class Operator implements OpIterator {
     private boolean open = false;
     private int estimatedCardinality = 0;
 
-    public void open() throws DbException, TransactionAbortedException {
+    public void open() throws DbException, TransactionAbortedException, IOException {
         this.open = true;
     }
 
