@@ -8,7 +8,8 @@ import java.util.NoSuchElementException;
 
 public class LruCache<K, V> {
 
-    public class Node {
+
+    protected class Node {
         Node prev, ne;
         K key;
         V val;
@@ -19,13 +20,13 @@ public class LruCache<K, V> {
         }
     }
 
-    private HashMap<K, Node> cache;
+    protected HashMap<K, Node> cache;
 
-    private int capacity;
+    protected int capacity;
 
-    private Node head, tail;
+    protected Node head, tail;
 
-    public void LruCache(int c) {
+    public LruCache(int c) {
         this.capacity = c;
         cache = new HashMap<>(c);
         head = new Node(null, null);
