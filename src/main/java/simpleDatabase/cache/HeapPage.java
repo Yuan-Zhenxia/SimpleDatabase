@@ -23,17 +23,21 @@ import java.util.NoSuchElementException;
 public class HeapPage implements Page {
 
     final HeapPageId pid;
+
     final TupleDesc td;
+
     final byte header[];
+
     final Tuple tuples[];
+
     private int numSlots;
+
     private TransactionId lastDirtyOperation;
 
-    // 如果HeapPage在修改前调用setBeforeImage(), 就能将当前的数据保留
-    // 修改之后通过 getBeforeImage()， 获取修改前的HeapPage
+    /* 保存之前村吃的数据，该page改动前的数据 */
     byte[] oldData;
 
-    private final Byte oldDataLock=new Byte((byte)0);
+    private final Byte oldDataLock = new Byte((byte)0);
 
     /**
      * Create a HeapPage from a set of bytes of data read from disk.
@@ -104,9 +108,7 @@ public class HeapPage implements Page {
      */
     public HeapPage getBeforeImage(){
         try {
-            byte[] oldDataRef = null;
-            synchronized(oldDataLock) { oldDataRef = oldData; }
-            return new HeapPage(pid, oldDataRef);
+            return new HeapPage(pid, oldData);
         } catch (IOException e) {
             e.printStackTrace();
             //should never happen -- we parsed it OK before!
@@ -120,7 +122,7 @@ public class HeapPage implements Page {
     /**
      * 设置这个page修改前的数据
      */
-    public void setBeforeImage() { synchronized(oldDataLock) { oldData = getPageData().clone(); } }
+    public void setBeforeImage() { oldData = getPageData().clone(); }
 
     /**
      * @return the PageId associated with this page.
@@ -190,7 +192,6 @@ public class HeapPage implements Page {
 
         // create the tuples
         for (int i=0; i<tuples.length; i++) {
-
             // empty slot
             if (!isSlotUsed(i)) {
                 for (int j=0; j<td.getSize(); j++) {
@@ -249,12 +250,12 @@ public class HeapPage implements Page {
      * @param t The tuple to delete
      */
     public void deleteTuple(Tuple t) throws DbException {
-        // some code goes here
-        // not necessary for lab1
         RecordId tid = t.getRecordId();
         HeapPageId hpid = (HeapPageId) tid.getPageId();
-        int tupleNum = tid.getTupleNumber();
-        // TODO
+        if (!hpid.equals(pid) || isSlotUsed(tid.getTupleNumber()))
+            throw new DbException("this tuple is not on the page, or slot is empty");
+        tuples[tid.getTupleNumber()] = null;
+        markSlotUsed(tid.getTupleNumber(), false);
     }
 
     /**

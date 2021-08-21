@@ -24,3 +24,6 @@ Finish LockManager - it's a class to manager all locks. get lock, release lock .
 
 ## 19 Aug. 2021
 Finish things about deadlock
+
+## 20 Aug. 2021
+Finished the left functions in HeapPage and HeapFile
