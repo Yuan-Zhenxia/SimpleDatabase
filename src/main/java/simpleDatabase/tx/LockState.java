@@ -5,6 +5,9 @@ import simpleDatabase.basic.Permissions;
 import java.security.acl.Permission;
 
 /**
+ *
+ * finished on 17 Aug. 2021
+ *
  * 记录这个事务需要什么等级的权限
  */
 public class LockState {

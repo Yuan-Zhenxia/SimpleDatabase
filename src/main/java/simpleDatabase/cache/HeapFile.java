@@ -1,5 +1,7 @@
 package simpleDatabase.cache;
 
+import simpleDatabase.basic.Database;
+import simpleDatabase.basic.Permissions;
 import simpleDatabase.exception.DbException;
 import simpleDatabase.exception.TransactionAbortedException;
 import simpleDatabase.iterator.DbFileIterator;
@@ -13,6 +15,8 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 /**
+ * finished
+ *
  * HeapFile is an implementation of a DbFile that stores a collection of tuples
  * in no particular order. Tuples are stored on pages, each of which is a fixed
  * size, and the file is simply a collection of those pages. HeapFile works
@@ -133,21 +137,63 @@ public class HeapFile implements DbFile {
             throws DbException, IOException, TransactionAbortedException {
         // some code goes here
         // TODO about transaction
-        ArrayList<Page> affectedPages = new ArrayList<>();
-        return null;
+        ArrayList<Page> dirtyPages = new ArrayList<>();
+        for (int i = 0; i < numPages(); ++i) {
+            HeapPageId hPId = new HeapPageId(getId(), i);
+            HeapPage heapPage = null;
+            try {
+                heapPage = (HeapPage) Database.getBufferPool().getPage(tid, hPId, Permissions.READ_WRITE);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            if (heapPage.getNumEmptySlots() != 0) {
+                heapPage.insertTuple(t); /* 还有空的位置能放入 */
+                heapPage.markDirty(true, tid);
+                dirtyPages.add(heapPage);
+                break;
+            }
+        }
+        if (dirtyPages.size() == 0) {
+            HeapPageId newPid = new HeapPageId(getId(), numPages());
+            HeapPage blankPage = new HeapPage(newPid, HeapPage.createEmptyPageData());
+            numPage++;
+            writePage(blankPage);
+            HeapPage newPage = null;
+            try {
+                newPage = (HeapPage) Database.getBufferPool().getPage(tid, newPid, Permissions.READ_WRITE);
+            } catch (InterruptedException e) { e.printStackTrace(); }
+            newPage.insertTuple(t);
+            newPage.markDirty(true, tid);
+            dirtyPages.add(newPage);
+        }
+        return dirtyPages;
     }
 
     // see DbFile.java for javaDocs
-    public ArrayList<Page> deleteTuple(TransactionId tid, Tuple t) throws DbException,
+    public Page deleteTuple(TransactionId tid, Tuple t) throws DbException,
             TransactionAbortedException {
         // some code goes here
-        return null;
-        // TODO not necessary for lab1
+        PageId pid = t.getRecordId().getPageId();
+        HeapPage dirtyPage = null;
+        for (int i = 0; i < numPages(); ++i) {
+            if (i == pid.getPageNumber()) {
+                try {
+                    dirtyPage = (HeapPage) Database.getBufferPool().getPage(tid, pid, Permissions.READ_WRITE);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                dirtyPage.deleteTuple(t);
+                dirtyPage.markDirty(true, tid);
+            }
+        }
+        if (dirtyPage == null) throw new DbException("tuple " + t + " is not int the table");
+        return dirtyPage;
     }
 
     // see DbFile.java for javaDocs
     public DbFileIterator iterator(TransactionId tid) {
         // some code goes here
+
         return new HeapFileIterator(tid);
     }
 
@@ -155,7 +201,7 @@ public class HeapFile implements DbFile {
 
         private int pagePos;
 
-        private Iterable<Tuple> tuplesInPage;
+        private Iterator<Tuple> tuplesInPage;
 
         private TransactionId tid;
 
@@ -164,33 +210,48 @@ public class HeapFile implements DbFile {
         }
 
         public Iterator<Tuple> getTuplesInPage(HeapPageId pid) throws TransactionAbortedException, DbException {
-            return null;
-            // TODO
+            HeapPage page = null;
+            try {
+                page = (HeapPage) Database.getBufferPool().getPage(tid, pid, Permissions.READ_ONLY);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return page.iterator();
         }
 
         @Override
         public void open() throws DbException, TransactionAbortedException {
-
+            pagePos = 0;
+            HeapPageId pid = new HeapPageId(getId(), pagePos);
+            tuplesInPage = getTuplesInPage(pid);
         }
 
         @Override
         public boolean hasNext() throws DbException, TransactionAbortedException {
-            return false;
+            if (tuplesInPage == null) return false; /* 已经关闭了 */
+            if (tuplesInPage.hasNext()) return true; /* 表示当前页还有没有被遍历玩的 */
+            if (pagePos < numPages() - 1) {
+                HeapPageId pid = new HeapPageId(getId(), ++pagePos);
+                tuplesInPage = getTuplesInPage(pid);
+                return tuplesInPage.hasNext();
+            } else return false;
         }
 
         @Override
         public Tuple next() throws DbException, TransactionAbortedException, NoSuchElementException {
-            return null;
+            if (!hasNext()) throw new NoSuchElementException("no tuple left");
+            return tuplesInPage.next();
         }
 
         @Override
         public void rewind() throws DbException, TransactionAbortedException {
-
+            open();
         }
 
         @Override
         public void close() {
-
+            pagePos = 0;
+            tuplesInPage = null;
         }
     }
 

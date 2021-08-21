@@ -4,10 +4,12 @@ import simpleDatabase.basic.Permissions;
 import simpleDatabase.exception.DbException;
 import simpleDatabase.exception.TransactionAbortedException;
 import simpleDatabase.basic.Database;
+import simpleDatabase.tx.LockManager;
 import simpleDatabase.tx.TransactionId;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 
 /**
  * BufferPool manages the reading and writing of pages into memory from
@@ -35,15 +37,13 @@ public class BufferPool {
     constructor instead. */
     public static final int DEFAULT_PAGES = 50;
 
-
-
     /**
      * 页的最大数量
      */
     public final int PAGES_NUM;
 
-    // private HashMap<PageId, Page> pid2Pages;
     private PageLruCache pageCache; // lru
+
     private final LockManager lockManager;
 
     private final long SLEEP_TIME; // 事务竞争锁需要等待的时间
@@ -59,7 +59,7 @@ public class BufferPool {
         PAGES_NUM = numPages;
         pageCache = new PageLruCache(PAGES_NUM);
         lockManager = new LockManager();
-        SLEEP_TIME = 500;
+        SLEEP_TIME = 300; /* use loop to try to get the lock, if too small, then cost lots of computer resources */
     }
     
     public static int getPageSize() {
@@ -92,23 +92,23 @@ public class BufferPool {
      * @param perm the requested permissions on the page
      */
     public  Page getPage(TransactionId tid, PageId pid, Permissions perm)
-        throws TransactionAbortedException, DbException {
+        throws TransactionAbortedException, DbException, InterruptedException {
         // some code goes here
-        if (pid2Pages.containsKey(pid)) return pid2Pages.get(pid);
-        else {
-            // 未命中
-            HeapFile table = (HeapFile) Database.getCatalog().getDbFile(pid.getTableId());
-            HeapPage newPage = (HeapPage) table.readPage(pid); // WARN
-            addNewPage(pid, newPage);
-            return newPage;
-        }
-    }
 
-    private void addNewPage(PageId pid, Page newPage) {
-        pid2Pages.put(pid, newPage);
-        if (pid2Pages.size() > PAGES_NUM) {
-            // TODO:  根据LRU算法或者别的算法来淘汰
+
+        if (pageCache.isCached(pid)) return pageCache.get(pid);
+        // 未命中
+        HeapFile table = (HeapFile) Database.getCatalog().getDbFile(pid.getTableId());
+        HeapPage newPage = (HeapPage) table.readPage(pid); // WARN
+        Page removedPage = pageCache.put(pid, newPage);
+        if (removedPage != null) { /* 不等于null 表示删除了一个老的缓存 */
+            try {
+                flushPage(removedPage);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
+        return newPage;
 
     }
 
@@ -230,28 +230,40 @@ public class BufferPool {
     }
 
     /**
-     * Flushes a certain page to disk
-     * @param pid an ID indicating the page to flush
+     * flush page to the disk
+     * @param page
+     * @throws IOException
      */
-    private synchronized  void flushPage(PageId pid) throws IOException {
+    private synchronized  void flushPage(Page page) throws IOException {
         // some code goes here
-        // not necessary for lab1
-
-        //TODO
+        HeapPage dirtyPage = (HeapPage) page;
+        HeapFile table = (HeapFile) Database.getCatalog().getDbFile(page.getId().getTableId());
+        table.writePage(dirtyPage); /* 使用table把脏页数据写到磁盘上，然后标记为干净页 */
+        dirtyPage.markDirty(false, null);
     }
 
     /** Write all pages of the specified transaction to disk.
      */
     public synchronized  void flushPages(TransactionId tid) throws IOException {
         // some code goes here
-        // not necessary for lab1|lab2
-        // TODO
+        Iterator<Page> it = pageCache.iterator();
+        while (it.hasNext()) {
+            Page p = it.next();
+            if (p.isDirty() != null && p.isDirty().equals(tid)) {
+                flushPage(p);
+                if (p.isDirty() == null)
+                    p.setBeforeImage();
+            }
+        }
     }
 
     /**
      * Discards a page from the buffer pool.
      * Flushes the page to disk to ensure dirty pages are updated on disk.
+     *
+     * realize this in LRUCache
      */
+    @Deprecated
     private synchronized  void evictPage() throws DbException {
         // some code goes here
         // not necessary for lab1

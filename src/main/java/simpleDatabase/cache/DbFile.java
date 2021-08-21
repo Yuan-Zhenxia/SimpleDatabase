@@ -67,7 +67,7 @@ public interface DbFile {
      * @throws DbException if the tuple cannot be deleted or is not a member
      *   of the file
      */
-    public ArrayList<Page> deleteTuple(TransactionId tid, Tuple t)
+    public Page deleteTuple(TransactionId tid, Tuple t)
         throws DbException, IOException, TransactionAbortedException;
 
     /**

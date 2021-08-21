@@ -98,6 +98,10 @@ public class HeapPage implements Page {
     
     /** TODO Return a view of this page before it was modified
         -- used by recovery */
+    /**
+     * 获取这个page修改前的数据
+     * @return
+     */
     public HeapPage getBeforeImage(){
         try {
             byte[] oldDataRef = null;
@@ -112,6 +116,10 @@ public class HeapPage implements Page {
     }
 
     // TODO
+
+    /**
+     * 设置这个page修改前的数据
+     */
     public void setBeforeImage() { synchronized(oldDataLock) { oldData = getPageData().clone(); } }
 
     /**

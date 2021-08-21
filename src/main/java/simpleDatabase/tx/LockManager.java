@@ -8,6 +8,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 
 /**
+ * finished on 21 Aug. 2021
+ *
  * basically, SLock refers to share lock; XLock refers to exclusive lock
  *
  * several transactions can read the same data concurrently,
