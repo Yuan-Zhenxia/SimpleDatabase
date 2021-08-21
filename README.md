@@ -13,10 +13,11 @@ Finish part of the Operations, such as Insert.
 
 ## 5 Aug. 2021
 
+Finish Lock state 
 
 ## 7 AUg. 2021
 
 Finish LruCache && PageCache
 
 ## 20 Aug. 2021
-Finish 
+Finish LockManager - it's a class to manager all locks. get lock, release lock ...

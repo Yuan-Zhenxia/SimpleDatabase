@@ -42,7 +42,12 @@ public class BufferPool {
      */
     public final int PAGES_NUM;
 
-    private HashMap<PageId, Page> pid2Pages;
+    // private HashMap<PageId, Page> pid2Pages;
+    private PageLruCache pageCache; // lru
+    private final LockManager lockManager;
+
+    private final long SLEEP_TIME; // 事务竞争锁需要等待的时间
+
 
     /**
      * Creates a BufferPool that caches up to numPages pages.
@@ -52,7 +57,9 @@ public class BufferPool {
     public BufferPool(int numPages) {
         // some code goes here
         PAGES_NUM = numPages;
-        pid2Pages = new HashMap<PageId, Page>(PAGES_NUM);
+        pageCache = new PageLruCache(PAGES_NUM);
+        lockManager = new LockManager();
+        SLEEP_TIME = 500;
     }
     
     public static int getPageSize() {
