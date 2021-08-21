@@ -19,5 +19,8 @@ Finish Lock state
 
 Finish LruCache && PageCache
 
-## 20 Aug. 2021
+## 18 Aug. 2021
 Finish LockManager - it's a class to manager all locks. get lock, release lock ...
+
+## 19 Aug. 2021
+Finish things about deadlock
