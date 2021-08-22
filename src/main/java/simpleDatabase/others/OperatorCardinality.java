@@ -1,10 +1,10 @@
 package simpleDatabase.others;
 
 //import java.util.HashMap;
-import simpleDatabase.operator.Aggregate;
-import simpleDatabase.operator.Aggregator;
+import simpleDatabase.operator.aggregate.Aggregate;
+import simpleDatabase.operator.aggregate.Aggregator;
 import simpleDatabase.operator.Filter;
-import simpleDatabase.operator.Join;
+import simpleDatabase.operator.join.Join;
 import simpleDatabase.iterator.SeqScan;
 
 import java.util.Map;

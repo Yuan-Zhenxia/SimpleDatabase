@@ -1,6 +1,7 @@
-package simpleDatabase.operator;
+package simpleDatabase.operator.join;
 
 import simpleDatabase.cache.Tuple;
+import simpleDatabase.operator.Predicate;
 
 import java.io.Serializable;
 

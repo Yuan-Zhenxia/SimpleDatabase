@@ -3,6 +3,11 @@ package simpleDatabase.others;
 import simpleDatabase.iterator.OpIterator;
 import simpleDatabase.operator.*;
 import simpleDatabase.iterator.SeqScan;
+import simpleDatabase.operator.aggregate.Aggregate;
+import simpleDatabase.operator.aggregate.Aggregator;
+import simpleDatabase.operator.join.HashEquiJoin;
+import simpleDatabase.operator.join.Join;
+import simpleDatabase.operator.join.JoinPredicate;
 
 
 import java.io.PrintStream;

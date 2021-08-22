@@ -1,4 +1,4 @@
-package simpleDatabase.operator;
+package simpleDatabase.operator.aggregate;
 
 import simpleDatabase.basic.Type;
 import simpleDatabase.cache.Tuple;
@@ -7,6 +7,7 @@ import simpleDatabase.field.Field;
 import simpleDatabase.field.IntField;
 import simpleDatabase.iterator.OpIterator;
 import simpleDatabase.iterator.TupleIterator;
+import simpleDatabase.operator.aggregate.Aggregator;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -1,6 +1,7 @@
-package simpleDatabase.operator;
+package simpleDatabase.operator.join;
 
 import simpleDatabase.iterator.OpIterator;
+import simpleDatabase.operator.Predicate;
 
 
 /**

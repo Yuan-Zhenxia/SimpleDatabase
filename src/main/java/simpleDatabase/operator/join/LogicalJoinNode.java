@@ -1,4 +1,4 @@
-package simpleDatabase.operator;
+package simpleDatabase.operator.join;
 
 import simpleDatabase.operator.Predicate;
 

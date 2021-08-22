@@ -26,6 +26,7 @@ public class Filter extends Operator {
 
     private OpIterator child;
 
+    /* 缓存过滤结果 */
     private TupleIterator filterCache;
 
     /**
@@ -63,6 +64,15 @@ public class Filter extends Operator {
         filterCache.open();
     }
 
+    /**
+     * 调用Predicate中的filter方法，来实现过滤方法
+     * 过滤器中只需要写好过程。具体的filter函数由Predicate来实现
+     * @param child
+     * @param predicate
+     * @return
+     * @throws DbException
+     * @throws TransactionAbortedException
+     */
     private TupleIterator filter (OpIterator child, Predicate predicate) throws DbException, TransactionAbortedException {
         ArrayList<Tuple> tuples = new ArrayList<>();
         while (child.hasNext()) {

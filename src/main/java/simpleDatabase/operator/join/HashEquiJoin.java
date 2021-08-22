@@ -1,4 +1,12 @@
-package simpleDatabase.operator;
+package simpleDatabase.operator.join;
+
+import simpleDatabase.cache.Tuple;
+import simpleDatabase.cache.TupleDesc;
+import simpleDatabase.exception.DbException;
+import simpleDatabase.exception.TransactionAbortedException;
+import simpleDatabase.iterator.OpIterator;
+import simpleDatabase.operator.Operator;
+import simpleDatabase.operator.join.JoinPredicate;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,8 +20,8 @@ public class HashEquiJoin extends Operator {
 
     private static final long serialVersionUID = 1L;
     private JoinPredicate pred;
-    private OpIterator child1, child2;
-    private TupleDesc comboTD;
+    private OpIterator child1, child2; /* 所有操作符需要实现的迭代器接口 */
+    private TupleDesc comboTD; /* 合并后的tupleDesc */
     transient private Tuple t1 = null;
     transient private Tuple t2 = null;
 
@@ -56,6 +64,12 @@ public class HashEquiJoin extends Operator {
     HashMap<Object, ArrayList<Tuple>> map = new HashMap<Object, ArrayList<Tuple>>();
     public final static int MAP_SIZE = 20000;
 
+    /**
+     *
+     * @return
+     * @throws DbException
+     * @throws TransactionAbortedException
+     */
     private boolean loadMap() throws DbException, TransactionAbortedException {
         int cnt = 0;
         map.clear();
@@ -71,7 +85,6 @@ public class HashEquiJoin extends Operator {
                 return true;
         }
         return cnt > 0;
-
     }
 
     public void open() throws DbException, NoSuchElementException,

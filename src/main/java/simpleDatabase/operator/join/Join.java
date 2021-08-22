@@ -1,6 +1,11 @@
-package simpleDatabase.operator;
+package simpleDatabase.operator.join;
 
+import simpleDatabase.cache.Tuple;
+import simpleDatabase.cache.TupleDesc;
+import simpleDatabase.exception.DbException;
+import simpleDatabase.exception.TransactionAbortedException;
 import simpleDatabase.iterator.OpIterator;
+import simpleDatabase.operator.Operator;
 
 import java.util.NoSuchElementException;
 

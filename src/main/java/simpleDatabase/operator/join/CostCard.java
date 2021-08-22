@@ -1,9 +1,8 @@
-package simpleDatabase.others;
-import simpleDatabase.operator.LogicalJoinNode;
+package simpleDatabase.operator.join;
 
 import java.util.Vector;
 
-/** Class returned by {@link JoinOptimizer#computeCostAndCardOfSubplan} specifying the
+/** Class returned by  specifying the
     cost and cardinality of the optimal plan represented by plan.
 */
 public class CostCard {

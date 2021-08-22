@@ -2,6 +2,11 @@ package simpleDatabase.others;
 
 import simpleDatabase.operator.*;
 import simpleDatabase.iterator.SeqScan;
+import simpleDatabase.operator.aggregate.Aggregate;
+import simpleDatabase.operator.aggregate.Aggregator;
+import simpleDatabase.operator.join.JoinOptimizer;
+import simpleDatabase.operator.join.LogicalJoinNode;
+import simpleDatabase.operator.join.LogicalSubplanJoinNode;
 import simpleDatabase.tx.TransactionId;
 
 import java.io.File;

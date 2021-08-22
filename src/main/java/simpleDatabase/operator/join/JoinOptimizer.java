@@ -1,6 +1,9 @@
-package simpleDatabase.operator;
+package simpleDatabase.operator.join;
 
+import simpleDatabase.basic.Database;
+import simpleDatabase.exception.ParsingException;
 import simpleDatabase.iterator.OpIterator;
+import simpleDatabase.operator.Predicate;
 import simpleDatabase.others.*;
 
 import javax.swing.*;
@@ -15,7 +18,7 @@ import java.util.*;
  */
 public class JoinOptimizer {
     LogicalPlan p;
-    Vector<simpledb.LogicalJoinNode> joins;
+    Vector<LogicalJoinNode> joins;
 
     /**
      * Constructor
@@ -25,7 +28,7 @@ public class JoinOptimizer {
      * @param joins
      *            the list of joins being performed
      */
-    public JoinOptimizer(LogicalPlan p, Vector<simpledb.LogicalJoinNode> joins) {
+    public JoinOptimizer(LogicalPlan p, Vector<LogicalJoinNode> joins) {
         this.p = p;
         this.joins = joins;
     }
@@ -154,10 +157,10 @@ public class JoinOptimizer {
      * Estimate the join cardinality of two tables.
      * */
     public static int estimateTableJoinCardinality(Predicate.Op joinOp,
-            String table1Alias, String table2Alias, String field1PureName,
-            String field2PureName, int card1, int card2, boolean t1pkey,
-            boolean t2pkey, Map<String, TableStats> stats,
-            Map<String, Integer> tableAliasToId) {
+                                                   String table1Alias, String table2Alias, String field1PureName,
+                                                   String field2PureName, int card1, int card2, boolean t1pkey,
+                                                   boolean t2pkey, Map<String, TableStats> stats,
+                                                   Map<String, Integer> tableAliasToId) {
         int card = 1;
         // some code goes here
         return card <= 0 ? 1 : card;

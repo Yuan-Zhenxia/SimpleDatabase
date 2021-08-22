@@ -1,5 +1,5 @@
 package simpleDatabase.others;
-import simpleDatabase.operator.LogicalJoinNode;
+import simpleDatabase.operator.join.LogicalJoinNode;
 
 import java.util.HashMap;
 import java.util.Set;

@@ -1,4 +1,4 @@
-package simpleDatabase.operator;
+package simpleDatabase.operator.aggregate;
 
 import simpleDatabase.iterator.OpIterator;
 import simpleDatabase.iterator.TupleIterator;

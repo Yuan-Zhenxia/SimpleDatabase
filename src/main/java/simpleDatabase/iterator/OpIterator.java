@@ -23,7 +23,7 @@ public interface OpIterator extends Serializable{
    * @throws DbException when there are problems opening/accessing the database.
    */
   public void open()
-          throws DbException, TransactionAbortedException, IOException;
+          throws DbException, TransactionAbortedException;
 
   /** Returns true if the iterator has more tuples.
    * @return true f the iterator has more tuples.
