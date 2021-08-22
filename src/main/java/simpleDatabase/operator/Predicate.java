@@ -6,6 +6,8 @@ import simpleDatabase.cache.Tuple;
 import java.io.Serializable;
 
 /**
+ * finished
+ *
  * 通过调用 field内部的比较方法，来实现代码分离
  *
  * Predicate compares tuples to a specified Field value.
@@ -75,27 +77,21 @@ public class Predicate implements Serializable {
     /**
      * @return the field number
      */
-    public int getIdx()
-    {
-        // some code goes here
+    public int getIdx() {
         return idx;
     }
 
     /**
      * @return the operator
      */
-    public Op getOp()
-    {
-        // some code goes here
+    public Op getOp() {
         return op;
     }
     
     /**
      * @return the operand
      */
-    public Field getOperand()
-    {
-        // some code goes here
+    public Field getOperand() {
         return operand;
     }
     
@@ -110,7 +106,8 @@ public class Predicate implements Serializable {
      * @return true if the comparison is true, false otherwise.
      */
     public boolean filter(Tuple t) {
-        // some code goes here
+        // compare 方法第一额参数接受比较操作符，第二个参数接受数字
+        // 例如如果大于，那么就判断这个field的值是否大于 operand
         return t.getField(idx).compare(op, operand);
     }
 
@@ -119,9 +116,9 @@ public class Predicate implements Serializable {
      * operand_string"
      */
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("(tuple x).fields[").append(idx).append("] ")
+        StringBuilder builder = new StringBuilder();
+        builder.append("(tuple x).fields[").append(idx).append("] ")
                 .append(op.toString()).append(" ").append(operand).append(" ?");
-        return sb.toString();
+        return builder.toString();
     }
 }

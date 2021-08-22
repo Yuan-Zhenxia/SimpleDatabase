@@ -26,6 +26,7 @@ public class Insert extends Operator {
 
     private OpIterator childOp;
 
+    /* insert操作会影响到的行数 tuple数 */
     private int count;
 
     private TupleDesc td;
