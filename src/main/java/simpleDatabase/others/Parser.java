@@ -3,6 +3,7 @@ package simpleDatabase.others;
 import jline.ArgumentCompletor;
 import jline.ConsoleReader;
 import jline.SimpleCompletor;
+import simpleDatabase.operator.join.LogicalPlan;
 import simpleDatabase.tx.Transaction;
 import simpleDatabase.tx.TransactionId;
 

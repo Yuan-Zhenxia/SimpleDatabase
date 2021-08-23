@@ -5,7 +5,7 @@ import simpleDatabase.operator.Predicate;
 
 
 /**
- * Not totally finished on 6 Aug.
+ * finished on 6 Aug.
  *
  * A LogicalSubplanJoinNode represens the state needed of a join of a
  * table to a subplan in a LogicalQueryPlan -- inherits state from
@@ -13,7 +13,9 @@ import simpleDatabase.operator.Predicate;
  */
 public class LogicalSubplanJoinNode extends LogicalJoinNode {
     
-    /** The subplan (used on the inner) of the join */
+    /**
+     * 使用在内连接，找出共公元素
+     * The subplan (used on the inner) of the join */
     /** inner join select their common elements */
     OpIterator subPlan;
     
@@ -33,11 +35,11 @@ public class LogicalSubplanJoinNode extends LogicalJoinNode {
     
     @Override public boolean equals(Object o) {
         LogicalJoinNode j2 =(LogicalJoinNode)o;
-        if (!(o instanceof LogicalSubplanJoinNode)) return false;
-        return (j2.t1Alias.equals(t1Alias)  && j2.f1PureName.equals(f1PureName) && ((LogicalSubplanJoinNode)o).subPlan.equals(subPlan));
+        if (!(o instanceof LogicalSubplanJoinNode))
+            return false;
+        return (j2.t1Alias.equals(t1Alias) && j2.f1PureName.equals(f1PureName) && ((LogicalSubplanJoinNode)o).subPlan.equals(subPlan));
     }
 
-    // TODO 我猜测 晚点再看
     public LogicalSubplanJoinNode swapInnerOuter() {
         LogicalSubplanJoinNode j2 = new LogicalSubplanJoinNode(t1Alias, f1PureName, subPlan, op);
         return j2;

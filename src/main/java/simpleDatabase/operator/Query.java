@@ -5,7 +5,7 @@ import simpleDatabase.cache.TupleDesc;
 import simpleDatabase.exception.DbException;
 import simpleDatabase.exception.TransactionAbortedException;
 import simpleDatabase.iterator.OpIterator;
-import simpleDatabase.others.LogicalPlan;
+import simpleDatabase.operator.join.LogicalPlan;
 import simpleDatabase.tx.TransactionId;
 
 import java.io.IOException;

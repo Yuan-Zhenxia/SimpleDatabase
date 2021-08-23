@@ -14,6 +14,8 @@ import java.util.LinkedList;
 import java.util.NoSuchElementException;
 
 /**
+ *
+ * finished
  * The Join operator implements the relational join operation.
  */
 public class Join extends Operator {

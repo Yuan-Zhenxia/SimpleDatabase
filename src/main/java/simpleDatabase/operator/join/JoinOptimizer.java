@@ -12,6 +12,8 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 import java.util.*;
 
 /**
+ * 优化排序一系列join
+ * 对于一个logical plan给出最好的 join实例
  * The JoinOptimizer class is responsible for ordering a series of joins
  * optimally, and for selecting the best instantiation of a join for a given
  * logical plan.

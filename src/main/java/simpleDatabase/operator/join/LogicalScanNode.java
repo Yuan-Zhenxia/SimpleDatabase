@@ -1,4 +1,6 @@
-package simpleDatabase.operator;
+package simpleDatabase.operator.join;
+
+import simpleDatabase.basic.Catalog;
 
 /**
  * finised on 5 Aug.

@@ -1,8 +1,9 @@
-package simpleDatabase.operator;
+package simpleDatabase.operator.join;
 
 /**
  * finished on 5 Aug.
  *
+ * 来表示一个 选择列表中的子句
  * select 操作所需要的field名字，包含group by可能需要的field
  * A LogicalSelectListNode represents a clause in the select list in
  * a LogicalQueryPlan

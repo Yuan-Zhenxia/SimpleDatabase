@@ -1,18 +1,31 @@
-package simpleDatabase.others;
+package simpleDatabase.operator.join;
 
+import simpleDatabase.basic.Catalog;
+import simpleDatabase.basic.Database;
+import simpleDatabase.basic.Type;
+import simpleDatabase.cache.HeapFile;
+import simpleDatabase.cache.Tuple;
+import simpleDatabase.cache.TupleDesc;
+import simpleDatabase.exception.ParsingException;
+import simpleDatabase.field.Field;
+import simpleDatabase.field.IntField;
+import simpleDatabase.field.StringField;
+import simpleDatabase.iterator.OpIterator;
 import simpleDatabase.operator.*;
 import simpleDatabase.iterator.SeqScan;
 import simpleDatabase.operator.aggregate.Aggregate;
 import simpleDatabase.operator.aggregate.Aggregator;
-import simpleDatabase.operator.join.JoinOptimizer;
-import simpleDatabase.operator.join.LogicalJoinNode;
-import simpleDatabase.operator.join.LogicalSubplanJoinNode;
+import simpleDatabase.others.TableStats;
 import simpleDatabase.tx.TransactionId;
 
 import java.io.File;
 import java.util.*;
 
 /**
+ * finished
+ * LogicalPlan 代表代表了一个逻辑查询，已经经过parser，并且准备好被优化器处理了
+ * 这个类是描述一个特定的查询，例如有没有使用sum，avg啊，等等
+ *
  * LogicalPlan represents a logical query plan that has been through
  * the parser and is ready to be processed by the optimizer.
  * <p>
@@ -27,19 +40,28 @@ import java.util.*;
  * best implementations for joins.
  */
 public class LogicalPlan {
+    /* 描述join操作需要的成员变量，操作符 op，jion涉及到的两个column */
     private Vector<LogicalJoinNode> joins;
+    /* 代表搜索的表 */
     private Vector<LogicalScanNode> tables;
+    /* where子查询中 过滤器的参数 */
     private Vector<LogicalFilterNode> filters;
+    /* 子查询缓存，名称和子查询结果映射 */
     private HashMap<String, OpIterator> subplanMap;
-    private HashMap<String,Integer> tableMap;
+    private HashMap<String,Integer> tableMap; /* 表别名和表id的映射 */
 
+    /* 查询分句 */
     private Vector<LogicalSelectListNode> selectList;
     private String groupByField = null;
+    /* 是否聚合 */
     private boolean hasAgg = false;
     private String aggOp;
     private String aggField;
+    /* oByAsc 是否以升序排序 */
     private boolean oByAsc, hasOrderBy = false;
+    /* 排序的field */
     private String oByField;
+    /* 查询语句 */
     private String query;
 //    private Query owner;
 
@@ -86,7 +108,10 @@ public class LogicalPlan {
         return this.tableMap;
     }
 
-    /** Add a new filter to the logical plan
+    /**
+     * field： filter所施加的field名字
+     * constantValue： 使用string来代替int value
+     * Add a new filter to the logical plan
      *   @param field The name of the over which the filter applies;
      *   this can be a fully qualified field (tablename.field or
      *   alias.field), or can be a unique field name without a
@@ -102,15 +127,18 @@ public class LogicalPlan {
      */
     public void addFilter(String field, Predicate.Op p, String
         constantValue) throws ParsingException{ 
-
+        /* 获取该field的真名 */
         field = disambiguateName(field); 
         String table = field.split("[.]")[0];
         
-        LogicalFilterNode lf = new LogicalFilterNode(table, field.split("[.]")[1], p, constantValue);
+        LogicalFilterNode lf = new LogicalFilterNode(table,
+                field.split("[.]")[1], p, constantValue);
         filters.addElement(lf);
     }
 
-    /** Add a join between two fields of two different tables.  
+    /**
+     * 给两张表的两个field之间添加 一个 join操作
+     * Add a join between two fields of two different tables.
      *  @param joinField1 The name of the first join field; this can
      *  be a fully qualified name (e.g., tableName.field or
      *  alias.field) or may be an unqualified unique field name.  If
@@ -135,10 +163,11 @@ public class LogicalPlan {
         LogicalJoinNode lj = new LogicalJoinNode(table1Alias,table2Alias,pureField1, pureField2, pred);
         System.out.println("Added join between " + joinField1 + " and " + joinField2);
         joins.addElement(lj);
-
     }
 
-    /** Add a join between a field and a subquery.
+    /**
+     * 给一个子查询和field之间添加join
+     * Add a join between a field and a subquery.
      *  @param joinField1 The name of the first join field; this can
      *  be a fully qualified name (e.g., tableName.field or
      *  alias.field) or may be an unqualified unique field name.  If
@@ -155,8 +184,8 @@ public class LogicalPlan {
 
         String table1 = joinField1.split("[.]")[0];
         String pureField = joinField1.split("[.]")[1];
-
-        LogicalSubplanJoinNode lj = new LogicalSubplanJoinNode(table1,pureField, joinField2, pred);
+        /* 子查询的结果可以看作是一个OpIterator */
+        LogicalSubplanJoinNode lj = new LogicalSubplanJoinNode(table1, pureField, joinField2, pred);
         System.out.println("Added subplan join on " + joinField1);
         joins.addElement(lj);
     }
@@ -169,8 +198,8 @@ public class LogicalPlan {
 
     public void addScan(int table, String name) {
         System.out.println("Added scan of table " + name);
-        tables.addElement(new LogicalScanNode(table,name));
-        tableMap.put(name,table);
+        tables.addElement(new LogicalScanNode(table, name));
+        tableMap.put(name, table);
     }
 
     /** Add a specified field/aggregate combination to the select list of the query.
@@ -180,13 +209,13 @@ public class LogicalPlan {
      * @throws ParsingException 
     */
     public void addProjectField(String fname, String aggOp) throws ParsingException {
-        fname=disambiguateName(fname);
+        fname = disambiguateName(fname);
         if (fname.equals("*"))
-            fname="null.*";
+            fname = "null.*";
         System.out.println("Added select list field " + fname);
-        if (aggOp != null) {
+        if (aggOp != null)
             System.out.println("\t with aggregator " + aggOp);
-        }
+
         selectList.addElement(new LogicalSelectListNode(aggOp, fname));
     }
     
@@ -199,9 +228,9 @@ public class LogicalPlan {
      * @throws ParsingException 
     */
     public void addAggregate(String op, String afield, String gfield) throws ParsingException {
-        afield=disambiguateName(afield);
-        if (gfield!=null)
-            gfield=disambiguateName(gfield);
+        afield = disambiguateName(afield);
+        if (gfield != null)
+            gfield = disambiguateName(gfield);
         aggOp = op;
         aggField = afield;
         groupByField = gfield;
@@ -215,13 +244,15 @@ public class LogicalPlan {
      * @throws ParsingException 
     */
     public void addOrderBy(String field, boolean asc) throws ParsingException {
-        field=disambiguateName(field);
+        field = disambiguateName(field);
         oByField = field;
         oByAsc = asc;
         hasOrderBy = true;
     }
 
-    /** Given a name of a field, try to figure out what table it belongs to by looking
+    /**
+     * 给定的名字来搞清楚具体对应的表和field域
+     * Given a name of a field, try to figure out what table it belongs to by looking
      *   through all of the tables added via {@link #addScan}. 
      *  @return A fully qualified name of the form tableAlias.name.  If the name parameter is already qualified
      *   with a table name, simply returns name.
@@ -229,7 +260,6 @@ public class LogicalPlan {
      *   field is ambiguous (appears in multiple tables)
      */
     String disambiguateName(String name) throws ParsingException {
-
         String[] fields = name.split("[.]");
         if (fields.length == 2 && (!fields[0].equals("null")))
             return name;
@@ -244,14 +274,13 @@ public class LogicalPlan {
         while (tableIt.hasNext()) {
             LogicalScanNode table = tableIt.next();
             try {
-                TupleDesc td = Database.getCatalog().getDatabaseFile(table.t).getTupleDesc();
+                TupleDesc td = Database.getCatalog().getDbFile(table.t).getTupleDesc();
 //                int id = 
                   td.fieldNameToIndex(name);
-                if (tableName == null) {
+                if (tableName == null)
                     tableName = table.alias;
-                } else {
+                else
                     throw new ParsingException("Field " + name + " appears in multiple tables; disambiguate by referring to it as tablename." + name);
-                }
             } catch (NoSuchElementException e) {
                 //ignore
             }
@@ -260,7 +289,6 @@ public class LogicalPlan {
             return tableName + "." + name;
         else
             throw new ParsingException("Field " + name + " does not appear in any tables.");
-
     }
 
     /** Convert the aggregate operator name s into an Aggregator.op operation.
@@ -276,7 +304,9 @@ public class LogicalPlan {
         throw new ParsingException("Unknown predicate " + s);
     }
 
-    /** Convert this LogicalPlan into a physicalPlan represented by a {@link OpIterator}.  Attempts to
+    /**
+     * 把逻辑查询转化成物理查询，通过 OpIterator
+     * Convert this LogicalPlan into a physicalPlan represented by a {@link OpIterator}.  Attempts to
      *   find the optimal plan by using {@link JoinOptimizer#orderJoins} to order the joins in the plan.
      *  @param t The transaction that the returned OpIterator will run as a part of
      *  @param baseTableStats a HashMap providing a {@link TableStats}
@@ -299,7 +329,7 @@ public class LogicalPlan {
             LogicalScanNode table = tableIt.next();
             SeqScan ss = null;
             try {
-                 ss = new SeqScan(t, Database.getCatalog().getDatabaseFile(table.t).getId(), table.alias);
+                 ss = new SeqScan(t, Database.getCatalog().getDbFile(table.t).getId(), table.alias);
             } catch (NoSuchElementException e) {
                 throw new ParsingException("Unknown table " + table.t);
             }

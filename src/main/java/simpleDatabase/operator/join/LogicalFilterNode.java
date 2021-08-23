@@ -1,3 +1,5 @@
+package simpleDatabase.operator.join;
+
 import simpleDatabase.operator.Predicate;
 
 /**
@@ -35,6 +37,6 @@ public class LogicalFilterNode {
             fieldPureName = tmps[tmps.length - 1];
         else
             fieldPureName = field;
-        this.fieldQuantifiedName = tableAlias+"."+fieldPureName; // 表名 + . + 原名
+        this.fieldQuantifiedName = tableAlias+"." + fieldPureName; // 表名 + . + 原名
     }
 }
