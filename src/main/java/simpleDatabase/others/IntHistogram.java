@@ -2,9 +2,21 @@ package simpleDatabase.others;
 
 import simpleDatabase.operator.Predicate;
 
-/** A class to represent a fixed-width histogram over a single integer-based field.
+/**
+ * int矩形图
+ * A class to represent a fixed-width histogram over a single integer-based field.
  */
 public class IntHistogram {
+
+    private int min, max;
+
+    private int buckets;
+
+    private int width;
+
+    private int[] histogram;
+
+    public int tupleNum;
 
     /**
      * Create a new IntHistogram.
@@ -23,7 +35,22 @@ public class IntHistogram {
      * @param max The maximum integer value that will ever be passed to this class for histogramming
      */
     public IntHistogram(int buckets, int min, int max) {
-    	// some code goes here
+    	this.min = min;
+    	this.max = max;
+    	this.buckets = buckets;
+    	/* 例如 max = min，需要 + 1， buckets是 2，range就是 2 */
+    	double range = (double) (1 + max - min) / buckets;
+    	/* 向上取整，例如1.3, 就是 2 */
+    	width = (int) Math.ceil(range);
+    	tupleNum = 0;
+    	histogram = new int[buckets];
+    	for (int i = 0; i < buckets; ++ i)
+    	    histogram[i] = 0;
+    }
+
+    private int val2Idx(int v) {
+        if (v == max) return buckets - 1;
+        else return (v - min) / width;
     }
 
     /**
@@ -31,10 +58,14 @@ public class IntHistogram {
      * @param v Value to add to the histogram
      */
     public void addValue(int v) {
-    	// some code goes here
+    	histogram[val2Idx(v)]++;
+    	tupleNum++;
     }
 
     /**
+     * 预测估计所需要的返回数
+     * selectivity大概指的是 选择的比例 或者数据数量
+     *
      * Estimate the selectivity of a particular predicate and operand on this table.
      * 
      * For example, if "op" is "GREATER_THAN" and "v" is 5, 
@@ -45,9 +76,51 @@ public class IntHistogram {
      * @return Predicted selectivity of this particular operator and value
      */
     public double estimateSelectivity(Predicate.Op op, int v) {
+        int bucketIdx = val2Idx(v);
+        /* left指的是当前这个bucket的左边界，right指的是当前这个bucket的右边界 */
+        int num, left = bucketIdx * width + min, right = bucketIdx * width + min + width - 1;
 
-    	// some code goes here
-        return -1.0;
+        switch (op) {
+            case EQUALS:
+                if (v < min || v > max) return 0.0;
+                else {
+                    num = histogram[bucketIdx];
+                    /* 该矩阵的高度表示了数量，表示这个值放入的bucket中，与此相同的值数量 */
+                    return (num * 1.0 / width) / tupleNum;
+                }
+            case GREATER_THAN:
+                if (v < min) return 1.0;
+                if (v > max) return 0.0;
+                num = histogram[bucketIdx];
+                /* 计算当前bucket中必v大的数据量 */
+                double partInBucket = ((right - v) / width * 1.0) * (num * 1.0 / tupleNum);
+                int numsOfRightPart = 0;
+                /* 累加右边的bucket，右边的都大于等于v */
+                for (int i = bucketIdx + 1; i < buckets; ++i) numsOfRightPart += histogram[i];
+                double partInRightBuckets = numsOfRightPart * 1.0 / tupleNum;
+                return partInBucket + partInRightBuckets;
+            case LESS_THAN:
+                if (v < min) return 0.0;
+                if (v > max) return 1.0;
+                num = histogram[bucketIdx];
+                double partInBucket2 = ((v - left) / width * 1.0) * (num * 1.0 / tupleNum);
+                int numsOfLeftPart = 0;
+                for (int i = bucketIdx - 1; i >= 0; i--) numsOfLeftPart += histogram[i];
+                double partInLeftBuckets = numsOfLeftPart * 1.0 / tupleNum;
+                return partInBucket2 + partInLeftBuckets;
+            case LESS_THAN_OR_EQ:
+                return estimateSelectivity(Predicate.Op.LESS_THAN, v)
+                        + estimateSelectivity(Predicate.Op.EQUALS, v);
+            case GREATER_THAN_OR_EQ:
+                return estimateSelectivity(Predicate.Op.GREATER_THAN, v)
+                        + estimateSelectivity(Predicate.Op.EQUALS, v);
+            case LIKE:
+                return avgSelectivity();
+            case NOT_EQUALS:
+                return 1 - estimateSelectivity(Predicate.Op.EQUALS, v);
+            default:
+                throw new RuntimeException();
+        }
     }
     
     /**
@@ -60,7 +133,7 @@ public class IntHistogram {
      * */
     public double avgSelectivity()
     {
-        // some code goes here
+        /* int 貌似没有like */
         return 1.0;
     }
     
@@ -68,7 +141,11 @@ public class IntHistogram {
      * @return A string describing this histogram, for debugging purposes
      */
     public String toString() {
-        // some code goes here
-        return null;
+        StringBuilder sb = new StringBuilder();
+        sb.append("width: " + width);
+        sb.append(", buckets: " + this.buckets);
+        sb.append(", max: " + this.max);
+        sb.append(", min: " + this.max);
+        return sb.toString();
     }
 }
