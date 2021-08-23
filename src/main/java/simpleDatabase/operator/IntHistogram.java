@@ -1,8 +1,9 @@
-package simpleDatabase.others;
+package simpleDatabase.operator;
 
 import simpleDatabase.operator.Predicate;
 
 /**
+ * finished
  * int矩形图
  * A class to represent a fixed-width histogram over a single integer-based field.
  */

@@ -1,8 +1,11 @@
-package simpleDatabase.others;
+package simpleDatabase.operator;
 
+import simpleDatabase.operator.IntHistogram;
 import simpleDatabase.operator.Predicate;
 
 /**
+ * finished
+ *
  * A class to represent a fixed-width histogram over a single String-based
  * field.
  */
@@ -29,25 +32,18 @@ public class StringHistogram {
     private int stringToInt(String s) {
         int i;
         int v = 0;
-        for (i = 3; i >= 0; i--) {
+        for (i = 3; i >= 0; i--)
             if (s.length() > 3 - i) {
                 int ci = (int) s.charAt(3 - i);
                 v += (ci) << (i * 8);
             }
-        }
 
         // XXX: hack to avoid getting wrong results for
         // strings which don't output in the range min to max
         if (!(s.equals("") || s.equals("zzzz"))) {
-            if (v < minVal()) {
-                v = minVal();
-            }
-
-            if (v > maxVal()) {
-                v = maxVal();
-            }
+            if (v < minVal()) v = minVal();
+            if (v > maxVal()) v = maxVal();
         }
-
         return v;
     }
 

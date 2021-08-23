@@ -196,6 +196,7 @@ public class TupleDesc implements Serializable {
     }
 
     /**
+     * 返回tuples的所有fields的共计长度
      * @return The size (in bytes) of tuples corresponding to this TupleDesc.
      *         Note that tuples from a given TupleDesc are of a fixed size.
      */
