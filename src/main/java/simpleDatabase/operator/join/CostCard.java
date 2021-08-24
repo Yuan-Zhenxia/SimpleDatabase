@@ -2,7 +2,11 @@ package simpleDatabase.operator.join;
 
 import java.util.Vector;
 
-/** Class returned by  specifying the
+/**
+ * 记录了优化的子查询cost和优化的子查询的集合数量，和优化的子查询
+ *
+ * finished
+ * Class returned by  specifying the
     cost and cardinality of the optimal plan represented by plan.
 */
 public class CostCard {

@@ -47,4 +47,6 @@ finished the part of histogramof tables
 
 ## 22 Aug. 2021
 
-Finish LogicalPlan and Join Optimizer
+Finish LogicalPlan and Join Optimizer, left some problems in the Join Optimizer, note with TODO
+
+Some functions in the Join Optimizer are so difficult!

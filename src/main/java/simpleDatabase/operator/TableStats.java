@@ -1,4 +1,4 @@
-package simpleDatabase.others;
+package simpleDatabase.operator;
 
 import simpleDatabase.basic.Database;
 import simpleDatabase.basic.Type;
@@ -8,10 +8,7 @@ import simpleDatabase.cache.TupleDesc;
 import simpleDatabase.field.IntField;
 import simpleDatabase.field.StringField;
 import simpleDatabase.iterator.DbFileIterator;
-import simpleDatabase.operator.IntHistogram;
-import simpleDatabase.operator.Predicate;
 import simpleDatabase.field.Field;
-import simpleDatabase.operator.StringHistogram;
 import simpleDatabase.tx.Transaction;
 
 import java.util.HashMap;

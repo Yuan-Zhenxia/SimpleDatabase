@@ -1,10 +1,12 @@
 package simpleDatabase.operator.join;
 
 import simpleDatabase.basic.Database;
+import simpleDatabase.cache.TupleDesc;
 import simpleDatabase.exception.ParsingException;
 import simpleDatabase.iterator.OpIterator;
+import simpleDatabase.operator.PlanCache;
 import simpleDatabase.operator.Predicate;
-import simpleDatabase.others.*;
+import simpleDatabase.operator.TableStats;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -19,7 +21,9 @@ import java.util.*;
  * logical plan.
  */
 public class JoinOptimizer {
+
     LogicalPlan p;
+
     Vector<LogicalJoinNode> joins;
 
     /**
@@ -62,24 +66,20 @@ public class JoinOptimizer {
             throw new ParsingException("Unknown field " + lj.f1QuantifiedName);
         }
 
-        if (lj instanceof LogicalSubplanJoinNode) {
+        /* 如果是LogicalSubPlanNode， field索引设置为0 */
+        if (lj instanceof LogicalSubplanJoinNode)
             t2id = 0;
-        } else {
+        else {
             try {
-                t2id = plan2.getTupleDesc().fieldNameToIndex(
-                        lj.f2QuantifiedName);
+                t2id = plan2.getTupleDesc().fieldNameToIndex(lj.f2QuantifiedName);
             } catch (NoSuchElementException e) {
-                throw new ParsingException("Unknown field "
-                        + lj.f2QuantifiedName);
+                throw new ParsingException("Unknown field " + lj.f2QuantifiedName);
             }
         }
 
-        JoinPredicate p = new JoinPredicate(t1id, lj.p, t2id);
-
-        j = new Join(p,plan1,plan2);
-
+        JoinPredicate p = new JoinPredicate(t1id, lj.op, t2id);
+        j = new Join(p, plan1, plan2);
         return j;
-
     }
 
     /**
@@ -112,14 +112,20 @@ public class JoinOptimizer {
             double cost1, double cost2) {
         if (j instanceof LogicalSubplanJoinNode) {
             // A LogicalSubplanJoinNode represents a subquery.
-            // You do not need to implement proper support for these for Lab 3.
             return card1 + cost1 + cost2;
         } else {
-            // Insert your code here.
-            // HINT: You may need to use the variable "j" if you implemented
-            // a join algorithm that's more complicated than a basic
-            // nested-loops join.
-            return -1.0;
+            /* 使用 block nested-loop join 算法 */
+            TupleDesc td = p.getTupleDesc(j.t1Alias);
+            /* 计算bolck数量 */
+            int blockNum = Join.blockNestedJoinBufferSize / td.getSize();
+            /* 因为要把左表放入缓冲中，所以计算左表全表扫描需要放入缓存几次 */
+            int numInCache = card1 / blockNum;
+            /* 判断是否有剩余数据剩余，如果有剩余则还需要在额外开销一次 */
+            int remain = (card1 - blockNum * numInCache) == 0 ? 0 : 1;
+            /* 需要开销的次数 */
+            int numsOfCost = numInCache + remain;
+            double cost = cost1 + numsOfCost * cost2 + (double) card1 * (double) card2;
+            return cost;
         }
     }
 
@@ -131,7 +137,7 @@ public class JoinOptimizer {
      *            A LogicalJoinNode representing the join operation being
      *            performed.
      * @param card1
-     *            Cardinality of the left-hand table in the join
+     *            Cardinality（集合中元素的数量） of the left-hand table in the join
      * @param card2
      *            Cardinality of the right-hand table in the join
      * @param t1pkey
@@ -149,7 +155,7 @@ public class JoinOptimizer {
             // You do not need to implement proper support for these for Lab 3.
             return card1;
         } else {
-            return estimateTableJoinCardinality(j.p, j.t1Alias, j.t2Alias,
+            return estimateTableJoinCardinality(j.op, j.t1Alias, j.t2Alias,
                     j.f1PureName, j.f2PureName, card1, card2, t1pkey, t2pkey,
                     stats, p.getTableAliasToIdMapping());
         }
@@ -163,8 +169,34 @@ public class JoinOptimizer {
                                                    String field2PureName, int card1, int card2, boolean t1pkey,
                                                    boolean t2pkey, Map<String, TableStats> stats,
                                                    Map<String, Integer> tableAliasToId) {
-        int card = 1;
-        // some code goes here
+        int card;
+        int smallCard = card1 < card2 ? card1 : card2;
+        int bigCard = card1 > card2 ? card1 : card2;
+        switch (joinOp) {
+            case EQUALS:
+                if (t1pkey && t2pkey) {
+                    /* 如果都有主键，则计算较小的开销 */
+                    card = smallCard;
+                } else if (t1pkey && !t2pkey) {
+                    /* table2 没有主键，需要全表扫描 */
+                    card = card2;
+                } else if (!t1pkey && t2pkey) {
+                    /* table1 没有主键，需要全表扫描 */
+                    card = card1;
+                } else {
+                    card = bigCard;
+                }
+                break;
+            case GREATER_THAN:
+            case GREATER_THAN_OR_EQ:
+            case LESS_THAN:
+            case LESS_THAN_OR_EQ:
+                /* 其实我并没有明白 这里 * 0.3 的目的 */
+                card = (int) (card1 * card2 * 0.3);
+                break;
+            default:
+                card = card1 * card2;
+        }
         return card <= 0 ? 1 : card;
     }
 
@@ -196,9 +228,7 @@ public class JoinOptimizer {
             }
             els = newels;
         }
-
         return els;
-
     }
 
     /**
@@ -225,16 +255,49 @@ public class JoinOptimizer {
             HashMap<String, TableStats> stats,
             HashMap<String, Double> filterSelectivities, boolean explain)
             throws ParsingException {
-        //Not necessary for labs 1--3
 
-        // some code goes here
         //Replace the following
-        return joins;
+        // 1. j = set of join nodes
+        // 2. for (i in 1...|j|):  // First find best plan for single join, then for two joins, etc.
+        // 3.     for s in {all length i subsets of j} // Looking at a concrete subset of joins
+        // 4.       bestPlan = {}  // We want to find the best plan for this concrete subset
+        // 5.       for s' in {all length i-1 subsets of s}
+        // 6.            subplan = optjoin(s')  // Look-up in the cache the best query plan for s but with one relation missing
+        // 7.            plan = best way to join (s-s') to subplan // Now find the best plan to extend s' by one join to get s
+        // 8.            if (cost(plan) < cost(bestPlan))
+        // 9.               bestPlan = plan // Update the best plan for computing s
+        // 10.      optjoin(s) = bestPlan
+        // 11. return optjoin(j)
+
+        int numJoinNodes = joins.size();
+        PlanCache pc = new PlanCache();
+        Set<LogicalJoinNode> wholeSet = null;
+        for (int i = 1; i <= numJoinNodes; ++i) {
+            Set<Set<LogicalJoinNode>> setOfSubset = this.enumerateSubsets(this.joins, i);
+            for (Set<LogicalJoinNode> s : setOfSubset) {
+                if (s.size() == numJoinNodes) wholeSet = s;
+                Double bestCostSofar = Double.MAX_VALUE;
+                CostCard bestPlan = new CostCard();
+                for (LogicalJoinNode toDel : s) {
+                    /* 计算出子查询的cost和card */
+                    CostCard plan = computeCostAndCardOfSubplan(stats, filterSelectivities, toDel, s, bestCostSofar, pc);
+                    if (plan != null) {
+                        bestCostSofar = plan.cost;
+                        bestPlan = plan;
+                    }
+                }
+                if (bestPlan.plan != null)
+                    pc.addPlan(s, bestPlan.cost, bestPlan.card, bestPlan.plan);
+            }
+        }
+        return pc.getOrder(wholeSet);
     }
 
     // ===================== Private Methods =================================
 
     /**
+     * TODO 坦白说看不懂 =-=
+     * 计算cost 和 card 的jion操作
      * This is a helper method that computes the cost and cardinality of joining
      * joinToRemove to joinSet (joinSet should contain joinToRemove), given that
      * all of the subsets of size joinSet.size() - 1 have already been computed
@@ -286,6 +349,7 @@ public class JoinOptimizer {
                 this.p.getTableId(j.t2Alias));
         String table1Alias = j.t1Alias;
         String table2Alias = j.t2Alias;
+        /* 上面是处理表名 */
 
         Set<LogicalJoinNode> news = (Set<LogicalJoinNode>) ((HashSet<LogicalJoinNode>) joinSet)
                 .clone();
@@ -296,6 +360,7 @@ public class JoinOptimizer {
         boolean leftPkey, rightPkey;
 
         if (news.isEmpty()) { // base case -- both are base relations
+            /* 值传入了一个join */
             prevBest = new Vector<LogicalJoinNode>();
             t1cost = stats.get(table1Name).estimateScanCost();
             t1card = stats.get(table1Name).estimateTableCardinality(
@@ -307,17 +372,15 @@ public class JoinOptimizer {
             t2card = table2Alias == null ? 0 : stats.get(table2Name)
                     .estimateTableCardinality(
                             filterSelectivities.get(j.t2Alias));
-            rightPkey = table2Alias == null ? false : isPkey(table2Alias,
-                    j.f2PureName);
+            rightPkey = table2Alias == null ? false : isPkey(table2Alias, j.f2PureName);
         } else {
             // news is not empty -- figure best way to join j to news
             prevBest = pc.getOrder(news);
 
             // possible that we have not cached an answer, if subset
             // includes a cross product
-            if (prevBest == null) {
-                return null;
-            }
+            /* 这表明 planCache 中没有最佳plan，直接返回 null，表示无最佳 */
+            if (prevBest == null) return null;
 
             double prevBestCost = pc.getCost(news);
             int bestCard = pc.getCard(news);
@@ -335,8 +398,7 @@ public class JoinOptimizer {
                 t2card = j.t2Alias == null ? 0 : stats.get(table2Name)
                         .estimateTableCardinality(
                                 filterSelectivities.get(j.t2Alias));
-                rightPkey = j.t2Alias == null ? false : isPkey(j.t2Alias,
-                        j.f2PureName);
+                rightPkey = j.t2Alias == null ? false : isPkey(j.t2Alias, j.f2PureName);
             } else if (doesJoin(prevBest, j.t2Alias)) { // j.t2 is in prevbest
                                                         // (both
                 // shouldn't be)
@@ -346,8 +408,7 @@ public class JoinOptimizer {
                 t2card = bestCard;
                 rightPkey = hasPkey(prevBest);
                 t1cost = stats.get(table1Name).estimateScanCost();
-                t1card = stats.get(table1Name).estimateTableCardinality(
-                        filterSelectivities.get(j.t1Alias));
+                t1card = stats.get(table1Name).estimateTableCardinality(filterSelectivities.get(j.t1Alias));
                 leftPkey = isPkey(j.t1Alias, j.f1PureName);
 
             } else {
@@ -375,8 +436,7 @@ public class JoinOptimizer {
 
         CostCard cc = new CostCard();
 
-        cc.card = estimateJoinCardinality(j, t1card, t2card, leftPkey,
-                rightPkey, stats);
+        cc.card = estimateJoinCardinality(j, t1card, t2card, leftPkey, rightPkey, stats);
         cc.cost = cost1;
         cc.plan = (Vector<LogicalJoinNode>) prevBest.clone();
         cc.plan.addElement(j); // prevbest is left -- add new join to end
@@ -384,6 +444,7 @@ public class JoinOptimizer {
     }
 
     /**
+     * 判断某张表是否在join列表中了
      * Return true if the specified table is in the list of joins, false
      * otherwise
      */
@@ -408,7 +469,6 @@ public class JoinOptimizer {
     private boolean isPkey(String tableAlias, String field) {
         int tid1 = p.getTableId(tableAlias);
         String pkey1 = Database.getCatalog().getPrimaryKey(tid1);
-
         return pkey1.equals(field);
     }
 
@@ -427,6 +487,7 @@ public class JoinOptimizer {
     }
 
     /**
+     * 打印出joins
      * Helper function to display a Swing window with a tree representation of
      * the specified list of joins. See {@link #orderJoins}, which may want to
      * call this when the analyze flag is true.

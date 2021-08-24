@@ -1,6 +1,7 @@
 package simpleDatabase.others;
 
 //import java.util.HashMap;
+import simpleDatabase.operator.TableStats;
 import simpleDatabase.operator.aggregate.Aggregate;
 import simpleDatabase.operator.aggregate.Aggregator;
 import simpleDatabase.operator.Filter;

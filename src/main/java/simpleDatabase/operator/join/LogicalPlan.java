@@ -15,9 +15,10 @@ import simpleDatabase.operator.*;
 import simpleDatabase.iterator.SeqScan;
 import simpleDatabase.operator.aggregate.Aggregate;
 import simpleDatabase.operator.aggregate.Aggregator;
-import simpleDatabase.others.TableStats;
+import simpleDatabase.operator.TableStats;
 import simpleDatabase.tx.TransactionId;
 
+import javax.xml.crypto.Data;
 import java.io.File;
 import java.util.*;
 
@@ -93,7 +94,7 @@ public class LogicalPlan {
         return query;
     }
 
-    /** Given a table alias, return id of the table object (this id can be supplied to {@link Catalog#getDatabaseFile(int)}).
+    /** Given a table alias, return id of the table object (this id can be supplied to {@link Catalog#getDbFile(int)}).
         Aliases are added as base tables are added via {@link #addScan}.
 
         @param alias the table alias to return a table id for
@@ -302,6 +303,12 @@ public class LogicalPlan {
         if (s.equals("MIN")) return Aggregator.Op.MIN;
         if (s.equals("MAX")) return Aggregator.Op.MAX;
         throw new ParsingException("Unknown predicate " + s);
+    }
+
+    public TupleDesc getTupleDesc (String alias) {
+        if (tableMap.containsKey(alias))
+            return Database.getCatalog().getDbFile(tableMap.get(alias)).getTupleDesc();
+        throw new IllegalArgumentException();
     }
 
     /**
