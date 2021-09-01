@@ -50,3 +50,7 @@ finished the part of histogramof tables
 Finish LogicalPlan and Join Optimizer, left some problems in the Join Optimizer, note with TODO
 
 Some functions in the Join Optimizer are so difficult!
+
+
+## 25 Aug. 2021
+Currently, I have some confusion about optimizer, and I need some time to find answer in a textbook.
